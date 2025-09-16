@@ -1,5 +1,5 @@
 {
-    "name": "flagged-bitfield",
+    "name": "@eliyya/flagged-bitfield",
     "version": "1.0.0",
     "description": "Type-safe flagged bitfield utility for TypeScript/JavaScript",
     "main": "lib/mod.js",
