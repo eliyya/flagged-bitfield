@@ -26,13 +26,24 @@ interface FrozenFlaggedBitfield<T extends Flags> {
     union(bit: Bit<T>): this
     intersection(bit: Bit<T>): this
     difference(bit: Bit<T>): this
-    simetricDifference(bit: Bit<T>): this
+    symmetricDifference(bit: Bit<T>): this
     complement(): this
+    equals(bit: Bit<T>): boolean
+    any(bit: Bit<T>): boolean
+    getFlags(): T
     isFrozen(): boolean
     toArray(): (keyof T)[]
     toJSON(): string
     toString(): string
+    toObject(): Record<keyof T, boolean>
     [Symbol.iterator](): IterableIterator<keyof T>
+    find(predicate: (flag: keyof T) => boolean): keyof T | undefined
+    findIndex(predicate: (flag: keyof T) => boolean): number
+    forEach(callback: (flag: keyof T) => void): void
+    map<R>(callback: (flag: keyof T) => R): R[]
+    entries(): [keyof T, bigint][]
+    keys(): (keyof T)[]
+    values(): bigint[]
 }
 
 type FlatBit<T extends Flags> =
@@ -168,7 +179,7 @@ export class FlaggedBitfield<T extends Flags>
         ) as unknown as this
     }
 
-    simetricDifference(bit: Bit<T>): typeof this {
+    symmetricDifference(bit: Bit<T>): typeof this {
         return new this.#con(
             this.#bitfield ^ this.#con.resolve(bit),
         ) as unknown as this
