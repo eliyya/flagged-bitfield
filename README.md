@@ -21,10 +21,10 @@ import { FlaggedBitfield } from '@eliyya/flagged-bitfield'
 // 1) Define your flags by extending the class
 class Permissions extends FlaggedBitfield<typeof Permissions.Flags> {
     static Flags = {
-        Read: 1n,
-        Write: 2n,
-        Execute: 4n,
-        Admin: 8n,
+        Read: 1n << 0n,
+        Write: 1n << 1n,
+        Execute: 1n << 2n,
+        Admin: 1n << 3n,
     } as const
 }
 

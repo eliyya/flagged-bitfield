@@ -5,9 +5,9 @@
  * Example:
  * ```ts
  * export const MyFlags = {
- *   Read: 1n,
- *   Write: 2n,
- *   Execute: 4n,
+ *   Read: 1n << 0n,
+ *   Write: 1n << 1n,
+ *   Execute: 1n << 2n,
  * } as const;
  * ```
  */
@@ -152,6 +152,19 @@ function safeIn(ob: object, key: string | number | symbol) {
  * respect the mask derived from the provided `Flags` definition.
  *
  * @typeParam T - A record of flag names mapped to bit values (powers of two).
+ *
+ * @example
+ * ```ts
+ * class Permissions extends FlaggedBitfield<typeof Permissions.Flags> {
+ *   static Flags = { Read: 1n << 0n, Write: 1n << 1n, Execute: 1n << 2n } as const
+ * }
+ *
+ * const p = new Permissions(['Read', 'Write'])
+ * p.has('Read')            // true
+ * p.without('Write')       // new instance without Write
+ * p.symmetricDifference('Execute') // XOR
+ * for (const f of p) { // iterate present flags }
+ * ```
  */
 export class FlaggedBitfield<T extends Flags>
     implements FlaggedBitfieldClass<T>
@@ -174,11 +187,21 @@ export class FlaggedBitfield<T extends Flags>
      * @typeParam T - Flags definition
      * @param bits - A bit or list of bits in any accepted format
      * @returns A normalized, masked bigint value
+     * @example
+     * ```ts
+     * class F extends FlaggedBitfield<typeof F.Flags> {
+     *   static Flags = { A: 1n << 0n, B: 1n << 1n } as const
+     * }
+     * F.normalize(['A', 'B'])    // 0b11n
+     * F.normalize(1n)            // 0b01n
+     * F.normalize(new F('A'))    // 0b01n
+     * F.normalize('UnknownKey')  // 0n
+     * ```
      */
-    static resolve<T extends Flags>(bits: Bit<T>): bigint {
+    static normalize<T extends Flags>(bits: Bit<T>): bigint {
         if (Array.isArray(bits)) {
             return bits.reduce((a: bigint, b) => {
-                return a | this.resolve(b)
+                return a | this.normalize(b)
             }, 0n)
         }
 
@@ -295,6 +318,11 @@ export class FlaggedBitfield<T extends Flags>
      *
      * @param bit - Bits to set
      * @returns A new bitfield instance
+     * @example
+     * ```ts
+     * const q = new Permissions('Read').with('Write')
+     * q.has(['Read', 'Write']) // true
+     * ```
      */
     with(bit: Bit<T>): typeof this {
         return new this.#con(this.#bitfield).add(bit) as unknown as this
@@ -305,6 +333,11 @@ export class FlaggedBitfield<T extends Flags>
      *
      * @param bit - Bits to clear
      * @returns A new bitfield instance
+     * @example
+     * ```ts
+     * const q = new Permissions(['Read', 'Write']).without('Write')
+     * q.has('Write') // false
+     * ```
      */
     without(bit: Bit<T>): typeof this {
         return new this.#con(this.#bitfield).remove(bit) as unknown as this
@@ -314,6 +347,11 @@ export class FlaggedBitfield<T extends Flags>
      * Return a new instance with all missing bits (within the mask) turned on.
      *
      * @returns A new bitfield instance that is the complement within the mask
+     * @example
+     * ```ts
+     * // If mask is Read|Write|Execute and current is Read
+     * new Permissions('Read').missing().toArray() // => ['Write', 'Execute']
+     * ```
      */
     missing(): typeof this {
         return new this.#con(
@@ -325,6 +363,10 @@ export class FlaggedBitfield<T extends Flags>
      * Invert this bitfield within the current mask (mutates).
      *
      * @returns This instance (for chaining)
+     * @example
+     * ```ts
+     * const p = new Permissions('Read').invert() // becomes Write|Execute
+     * ```
      */
     invert(): this {
         if (this.#frozen) return this
@@ -332,7 +374,12 @@ export class FlaggedBitfield<T extends Flags>
         return this
     }
 
-    /** Alias of {@link with}. */
+    /** Alias of {@link with}.
+     * @example
+     * ```ts
+     * const u = new Permissions('Read').union('Write') // same as with('Write')
+     * ```
+     */
     union(bit: Bit<T>): typeof this {
         return this.with(bit)
     }
@@ -341,6 +388,11 @@ export class FlaggedBitfield<T extends Flags>
      * Return the intersection (AND) of this bitfield with the provided bits.
      *
      * @param bit - Bits to intersect with
+     * @example
+     * ```ts
+     * const inter = new Permissions(['Read','Write']).intersection('Read')
+     * inter.equals('Read') // true
+     * ```
      */
     intersection(bit: Bit<T>): typeof this {
         return new this.#con(
@@ -352,6 +404,11 @@ export class FlaggedBitfield<T extends Flags>
      * Return the difference (A & ~B) between this bitfield and the provided bits.
      *
      * @param bit - Bits to subtract from this set
+     * @example
+     * ```ts
+     * const diff = new Permissions(['Read','Write']).difference('Read')
+     * diff.equals('Write') // true
+     * ```
      */
     difference(bit: Bit<T>): typeof this {
         return new this.#con(
@@ -363,6 +420,12 @@ export class FlaggedBitfield<T extends Flags>
      * Return the symmetric difference (XOR) between this bitfield and the provided bits.
      *
      * @param bit - Bits to XOR with
+     * @example
+     * ```ts
+     * const a = new Permissions('Read')
+     * const b = a.symmetricDifference('Write') // => Read ^ Write
+     * b.has(['Read','Write']) // true
+     * ```
      */
     symmetricDifference(bit: Bit<T>): typeof this {
         return new this.#con(
@@ -370,7 +433,12 @@ export class FlaggedBitfield<T extends Flags>
         ) as unknown as this
     }
 
-    /** Return the complement of this bitfield within the defined mask. */
+    /** Return the complement of this bitfield within the defined mask.
+     * @example
+     * ```ts
+     * new Permissions('Read').complement().toArray() // => ['Write','Execute']
+     * ```
+     */
     complement(): typeof this {
         return this.missing()
     }
@@ -379,6 +447,11 @@ export class FlaggedBitfield<T extends Flags>
      * Strict equality check: whether this bitfield is exactly equal to the provided bits.
      *
      * @param bit - Bits to compare to
+     * @example
+     * ```ts
+     * new Permissions(['Read','Write']).equals(['Read','Write']) // true
+     * new Permissions(['Read','Write']).equals('Read')           // false
+     * ```
      */
     equals(bit: Bit<T>): boolean {
         return this.#bitfield === this.#con.resolve(bit)
@@ -386,6 +459,11 @@ export class FlaggedBitfield<T extends Flags>
 
     /**
      * Check whether there is any overlap with the provided bits (intersection != 0n).
+     * @example
+     * ```ts
+     * new Permissions(['Read','Write']).any('Execute') // false
+     * new Permissions(['Read','Write']).any('Read')    // true
+     * ```
      */
     any(bit: Bit<T>): boolean {
         return this.intersection(bit).bitfield !== 0n
@@ -400,6 +478,10 @@ export class FlaggedBitfield<T extends Flags>
      * Convert the internal bigint to a string.
      *
      * @param radix - Radix for conversion (2, 10, 16, ...)
+     * @example
+     * ```ts
+     * new Permissions(['Read']).toString(2) // e.g., "1"
+     * ```
      */
     toString(radix?: number): string {
         return this.#bitfield.toString(radix)
@@ -410,18 +492,33 @@ export class FlaggedBitfield<T extends Flags>
         return this.#bitfield.toString()
     }
 
-    /** Convert the internal bigint to a number (may truncate for very large values). */
+    /** Convert the internal bigint to a number (may truncate for very large values).
+     * @example
+     * ```ts
+     * new Permissions(['Read']).toNumber() // e.g., 1
+     * ```
+     */
     toNumber(): number {
         return Number(this.#bitfield)
     }
 
-    /** List all present flags as an array (iteration order is ascending by bit value). */
+    /** List all present flags as an array (iteration order is ascending by bit value).
+     * @example
+     * ```ts
+     * new Permissions(['Read','Execute']).toArray() // => ['Read','Execute']
+     * ```
+     */
     toArray(): (keyof T)[] {
         return [...this]
     }
 
     /**
      * Convert to a plain object mapping each flag key to a boolean presence.
+     * @example
+     * ```ts
+     * new Permissions(['Read']).toObject()
+     * // => { Read: true, Write: false, Execute: false }
+     * ```
      */
     toObject(): Record<keyof T, boolean> {
         const r: Partial<Record<keyof T, boolean>> = {}
@@ -431,14 +528,26 @@ export class FlaggedBitfield<T extends Flags>
         return r as Record<keyof T, boolean>
     }
 
-    /** Iterate over all present flags in ascending bit order. */
+    /** Iterate over all present flags in ascending bit order.
+     * @example
+     * ```ts
+     * for (const f of new Permissions(['Read','Write'])) {
+     *   console.log(f)
+     * }
+     * ```
+     */
     *[Symbol.iterator](): IterableIterator<keyof T> {
         for (const [flag, bit] of this.#validFlags) {
             if ((this.#bitfield & bit) !== 0n) yield flag
         }
     }
 
-    /** Find the first present flag matching the predicate, if any. */
+    /** Find the first present flag matching the predicate, if any.
+     * @example
+     * ```ts
+     * new Permissions(['Read','Write']).find(f => f.startsWith('W')) // 'Write'
+     * ```
+     */
     find(predicate: (flag: keyof T) => boolean): keyof T | undefined {
         for (const f of this) {
             if (predicate(f)) return f
@@ -446,7 +555,12 @@ export class FlaggedBitfield<T extends Flags>
         return undefined
     }
 
-    /** Find the index within the internal ordered flags of the first match, or -1. */
+    /** Find the index within the internal ordered flags of the first match, or -1.
+     * @example
+     * ```ts
+     * new Permissions(['Read','Write']).findIndex(f => f === 'Write') // >= 0
+     * ```
+     */
     findIndex(predicate: (flag: keyof T) => boolean): number {
         for (let i = 0; i < this.#validFlags.length; i++) {
             // eslint-disable-next-line security/detect-object-injection
@@ -455,14 +569,24 @@ export class FlaggedBitfield<T extends Flags>
         return -1
     }
 
-    /** Iterate all present flags, invoking `callback` for each. */
+    /** Iterate all present flags, invoking `callback` for each.
+     * @example
+     * ```ts
+     * new Permissions(['Read','Write']).forEach(f => console.log(f))
+     * ```
+     */
     forEach(callback: (flag: keyof T) => void): void {
         for (const f of this) {
             callback(f)
         }
     }
 
-    /** Map over all present flags, returning an array with the mapped results. */
+    /** Map over all present flags, returning an array with the mapped results.
+     * @example
+     * ```ts
+     * new Permissions(['Read']).map(f => f.toLowerCase()) // ['read']
+     * ```
+     */
     map<R>(callback: (flag: keyof T) => R): R[] {
         const r: R[] = []
         for (const f of this) {
@@ -471,17 +595,32 @@ export class FlaggedBitfield<T extends Flags>
         return r
     }
 
-    /** Return all known flag entries [key, value] sorted by bit value. */
+    /** Return all known flag entries [key, value] sorted by bit value.
+     * @example
+     * ```ts
+     * new Permissions().entries() // e.g., [['Read',1n], ['Write',2n], ...]
+     * ```
+     */
     entries(): [keyof T, bigint][] {
         return this.#validFlags
     }
 
-    /** Return all known flag keys in ascending bit order. */
+    /** Return all known flag keys in ascending bit order.
+     * @example
+     * ```ts
+     * new Permissions().keys() // ['Read','Write','Execute']
+     * ```
+     */
     keys(): (keyof T)[] {
         return this.#validFlags.map(([k]) => k)
     }
 
-    /** Return all known flag values (bigints) in ascending bit order. */
+    /** Return all known flag values (bigints) in ascending bit order.
+     * @example
+     * ```ts
+     * new Permissions().values() // [1n,2n,4n]
+     * ```
+     */
     values(): bigint[] {
         return this.#validFlags.map(([, v]) => v)
     }
@@ -489,6 +628,12 @@ export class FlaggedBitfield<T extends Flags>
     /**
      * Freeze this instance: subsequent mutating calls (`add`, `remove`, `invert`)
      * will no-op and return the same (frozen) instance. Also calls `Object.freeze`.
+     * @example
+     * ```ts
+     * const frozen = new Permissions('Read').freeze()
+     * frozen.add('Write') // no-op; still 'Read'
+     * frozen.isFrozen()   // true
+     * ```
      */
     freeze(): FrozenFlaggedBitfield<T> {
         this.#frozen = true
