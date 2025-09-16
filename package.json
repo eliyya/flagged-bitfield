@@ -1,7 +1,7 @@
 {
     "name": "flagged-bitfield",
     "version": "1.0.0",
-    "description": "",
+    "description": "Type-safe flagged bitfield utility for TypeScript/JavaScript",
     "main": "lib/mod.js",
     "type": "module",
     "types": "lib/mod.d.ts",
@@ -16,8 +16,6 @@
         "@typescript-eslint/parser": "8.43.0",
         "eslint": "9.35.0",
         "eslint-config-prettier": "10.1.8",
-        "eslint-import-resolver-typescript": "4.4.4",
-        "eslint-plugin-import": "2.32.0",
         "eslint-plugin-node": "11.1.0",
         "eslint-plugin-prettier": "5.5.4",
         "eslint-plugin-security": "3.0.1",
@@ -26,7 +24,32 @@
         "typescript": "5.9.2",
         "typescript-eslint": "8.43.0"
     },
-    "keywords": [],
-    "author": "",
-    "license": "ISC"
+    "keywords": [
+        "bitfield",
+        "flags",
+        "named-flags",
+        "flagged-bitfield",
+        "typescript",
+        "bigint",
+        "bitmask",
+        "binary-flags",
+        "mask",
+        "utility",
+        "data-structure"
+    ],
+    "author": {
+        "email": "elimacmun@gmail.com",
+        "name": "eliyya",
+        "url": "https://github.com/eliyya"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/eliyya/flagged-bitfield.git"
+    },
+    "bugs": {
+        "url": "https://github.com/eliyya/flagged-bitfield/issues",
+        "email": "elimacmun@gmail.com"
+    },
+    "homepage": "https://github.com/eliyya/flagged-bitfield#readme"
 }

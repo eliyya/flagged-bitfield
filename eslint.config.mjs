@@ -1,6 +1,5 @@
 import js from '@eslint/js'
 import prettierConfig from 'eslint-config-prettier'
-import importPlugin from 'eslint-plugin-import'
 import nodePlugin from 'eslint-plugin-node'
 import prettierPlugin from 'eslint-plugin-prettier'
 import securityPlugin from 'eslint-plugin-security'
@@ -30,7 +29,6 @@ export default [
     {
         plugins: {
             prettier: prettierPlugin,
-            import: importPlugin,
             node: nodePlugin,
             security: securityPlugin,
         },
@@ -73,10 +71,6 @@ export default [
                     alphabetize: { order: 'asc', caseInsensitive: true },
                 },
             ],
-            'import/newline-after-import': 'error',
-            'import/no-duplicates': 'error',
-            'import/no-self-import': 'error',
-            'import/no-dynamic-require': 'error',
             'no-console': ['warn', { allow: ['warn', 'error'] }],
             'node/no-missing-import': [
                 'error',
