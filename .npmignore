@@ -1,0 +1,7 @@
+.vscode
+node_modules
+src
+.prettierrc
+eslint.config.js
+package-lock.json
+tsconfig.json

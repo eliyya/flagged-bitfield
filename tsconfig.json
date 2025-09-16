@@ -22,7 +22,6 @@
         // Stricter Typechecking Options
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
-        "allowJs": false,
 
         // Style Options
         "noImplicitReturns": true,
@@ -31,9 +30,6 @@
         "noUnusedParameters": true,
         // "noFallthroughCasesInSwitch": true,
         // "noPropertyAccessFromIndexSignature": true,
-        "allowImportingTsExtensions": true,
-        "allowArbitraryExtensions": false,
-        "emitDeclarationOnly": true,
 
         // Recommended Options
         "strict": true,

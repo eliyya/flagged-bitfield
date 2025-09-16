@@ -4,8 +4,10 @@
     "description": "",
     "main": "lib/mod.js",
     "type": "module",
+    "types": "lib/mod.d.ts",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "tsc && terser lib/mod.js -o lib/mod.js"
     },
     "devDependencies": {
         "@eslint/js": "9.35.0",
@@ -20,7 +22,7 @@
         "eslint-plugin-prettier": "5.5.4",
         "eslint-plugin-security": "3.0.1",
         "prettier": "3.6.2",
-        "prisma": "6.16.1",
+        "terser": "5.44.0",
         "typescript": "5.9.2",
         "typescript-eslint": "8.43.0"
     },

@@ -9,7 +9,7 @@ import * as tseslint from 'typescript-eslint'
 /** @type {import('eslint').Linter.Config[]} */
 export default [
     {
-        ignores: ['node_modules/**'],
+        ignores: ['node_modules/**', 'lib/**'],
     },
     js.configs.recommended,
     // Configuración recomendada de TypeScript-ESLint (ya incluye parser, plugins y reglas)
