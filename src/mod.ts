@@ -209,6 +209,12 @@ export class FlaggedBitfield<T extends Flags>
             return 0n
         }
 
+        if (typeof bits === 'string') {
+            if (safeIn(this.Flags, bits))
+                return BigInt(this.Flags[bits as keyof typeof this.Flags] ?? 0)
+            if (!Number.isNaN(Number(bits))) bits = BigInt(bits)
+        }
+
         if (typeof bits === 'boolean') bits = BigInt(bits)
 
         if (bits instanceof FlaggedBitfield) {
@@ -217,11 +223,6 @@ export class FlaggedBitfield<T extends Flags>
 
         if (typeof bits === 'number' || typeof bits === 'bigint') {
             return BigInt(bits) & this.getMask()
-        }
-
-        if (typeof bits === 'string') {
-            if (safeIn(this.Flags, bits))
-                return BigInt(this.Flags[bits as keyof typeof this.Flags] ?? 0)
         }
 
         return 0n
@@ -646,3 +647,5 @@ export class FlaggedBitfield<T extends Flags>
         return this.#frozen
     }
 }
+
+export default FlaggedBitfield

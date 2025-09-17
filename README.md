@@ -114,12 +114,17 @@ class Defaults extends FlaggedBitfield<typeof Defaults.Flags> {
 const d = new Defaults() // bitfield starts at 1n
 ```
 
-### Working with raw numbers/bigints
+### Working with raw numbers/bigints, strings, arrays and other FlaggedBitfield instances
 
 ```ts
-const x = new Permissions(0b101n) // Read + Execute
-x.has(['Read', 'Execute']) // true
-x.equals(['Read', 'Execute']) // true
+new Permissions(0b001 | 0b100) // Read + Execute
+new Permissions(5) // Read + Execute
+new Permissions(5n) // Read + Execute
+new Permissions('5') // Read + Execute
+new Permissions(['Read', 'Execute']) // Read + Execute
+new Permissions(Permissions.Flags.Read | Permissions.Flags.Execute) // Read + Execute
+new Permissions([Permissions.Flags.Read, Permissions.Flags.Execute]) // Read + Execute
+new Permissions(new Permissions(['Read', 'Execute'])) // same as above
 ```
 
 ### Combining sets
