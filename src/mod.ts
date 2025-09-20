@@ -21,7 +21,7 @@ type IFlaggedBitfield<T extends Flags> = {
     new (bits?: Bit<T>): FlaggedBitfieldClass<T>
     Flags: T
     DefaultBit: bigint
-    resolve<T extends Flags>(bits: Bit<T>): bigint
+    normalize<T extends Flags>(bits: Bit<T>): bigint
     getMaxBit(): bigint
     getMask(): bigint
 }
@@ -265,7 +265,7 @@ export class FlaggedBitfield<T extends Flags>
      */
     constructor(bits: Bit<T> = this.#bitfield) {
         this.#con = this.constructor as IFlaggedBitfield<T>
-        this.#bitfield = this.#con.resolve(bits)
+        this.#bitfield = this.#con.normalize(bits)
         this.#validFlags = Reflect.ownKeys(this.#con.Flags)
             .map<[keyof T, bigint]>(k => [
                 k as keyof T,
@@ -287,7 +287,7 @@ export class FlaggedBitfield<T extends Flags>
     add(bit: Bit<T>): this {
         if (this.#frozen) return this
         this.#bitfield =
-            (this.#bitfield | this.#con.resolve(bit)) & this.#con.getMask()
+            (this.#bitfield | this.#con.normalize(bit)) & this.#con.getMask()
         return this
     }
 
@@ -300,7 +300,7 @@ export class FlaggedBitfield<T extends Flags>
     remove(bit: Bit<T>): this {
         if (this.#frozen) return this
         this.#bitfield =
-            this.#bitfield & ~this.#con.resolve(bit) & this.#con.getMask()
+            this.#bitfield & ~this.#con.normalize(bit) & this.#con.getMask()
         return this
     }
 
@@ -311,7 +311,7 @@ export class FlaggedBitfield<T extends Flags>
      * @returns true if any overlap exists, false otherwise
      */
     has(bit: Bit<T>): boolean {
-        return (this.#bitfield & this.#con.resolve(bit)) !== 0n
+        return (this.#bitfield & this.#con.normalize(bit)) !== 0n
     }
 
     /**
@@ -397,7 +397,7 @@ export class FlaggedBitfield<T extends Flags>
      */
     intersection(bit: Bit<T>): typeof this {
         return new this.#con(
-            this.#bitfield & this.#con.resolve(bit),
+            this.#bitfield & this.#con.normalize(bit),
         ) as unknown as this
     }
 
@@ -413,7 +413,7 @@ export class FlaggedBitfield<T extends Flags>
      */
     difference(bit: Bit<T>): typeof this {
         return new this.#con(
-            this.#bitfield & ~this.#con.resolve(bit),
+            this.#bitfield & ~this.#con.normalize(bit),
         ) as unknown as this
     }
 
@@ -430,7 +430,7 @@ export class FlaggedBitfield<T extends Flags>
      */
     symmetricDifference(bit: Bit<T>): typeof this {
         return new this.#con(
-            this.#bitfield ^ this.#con.resolve(bit),
+            this.#bitfield ^ this.#con.normalize(bit),
         ) as unknown as this
     }
 
@@ -455,7 +455,7 @@ export class FlaggedBitfield<T extends Flags>
      * ```
      */
     equals(bit: Bit<T>): boolean {
-        return this.#bitfield === this.#con.resolve(bit)
+        return this.#bitfield === this.#con.normalize(bit)
     }
 
     /**
